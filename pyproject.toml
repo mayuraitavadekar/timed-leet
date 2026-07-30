@@ -34,6 +34,7 @@ dev = [
 
 [project.scripts]
 timed-leet = "timed_leet.app:main"
+timed_leet = "timed_leet.app:main"
 
 [tool.setuptools.packages.find]
 include = ["timed_leet*"]

@@ -39,6 +39,13 @@ python -m pip install .
 timed-leet
 ```
 
+Both command spellings are supported:
+
+```bash
+timed-leet
+timed_leet
+```
+
 You can also launch it with:
 
 ```bash

@@ -43,12 +43,12 @@ def format_time(seconds: float) -> str:
     return f"{minutes:02d}:{secs:02d}"
 
 
-class FlatButton(tk.Label):
-    """A platform-consistent button.
+class FlatButton(ttk.Button):
+    """A real button with platform-consistent colors.
 
-    macOS's native Tk button can ignore a custom background while preserving a
-    custom white foreground, which makes the label disappear. A keyboard-
-    accessible label button gives the same colors on every supported platform.
+    Using a label as a button made click handling unreliable on some Tk/macOS
+    versions.  The ``clam`` ttk theme honors these colors while preserving the
+    native button command and keyboard behavior.
     """
 
     def __init__(
@@ -70,48 +70,55 @@ class FlatButton(tk.Label):
         padx: int = 16,
         pady: int = 10,
     ) -> None:
+        self._style_name = f"Flat{id(self)}.TButton"
+        self._style = ttk.Style(parent)
+        self._font = font
+        self._anchor = anchor
+        self._padx = padx
+        self._pady = pady
+        self._base_bg = bg
+        self._hover_bg = hover_bg
+        self._foreground = fg
+        self._configure_palette()
         super().__init__(
             parent,
             text=text,
+            command=command,
             width=width,
-            anchor=anchor,
-            font=font,
-            fg=fg,
-            bg=bg,
-            disabledforeground=COLORS["muted"],
-            padx=padx,
-            pady=pady,
-            cursor="hand2",
             takefocus=True,
-            highlightthickness=1,
-            highlightbackground=bg,
-            highlightcolor=COLORS["cyan"],
+            cursor="hand2",
+            style=self._style_name,
         )
-        self._command = command
-        self._base_bg = bg
-        self._hover_bg = hover_bg
-        self.bind("<Button-1>", self._activate)
-        self.bind("<Return>", self._activate)
-        self.bind("<space>", self._activate)
-        self.bind("<Enter>", self._on_enter)
-        self.bind("<Leave>", self._on_leave)
 
     def set_palette(self, *, bg: str, fg: str, hover_bg: str) -> None:
         self._base_bg = bg
         self._hover_bg = hover_bg
-        self.configure(bg=bg, fg=fg, highlightbackground=bg)
+        self._foreground = fg
+        self._configure_palette()
 
-    def _activate(self, _event: tk.Event[tk.Misc]) -> str:
-        if str(self.cget("state")) != "disabled":
-            self._command()
-        return "break"
-
-    def _on_enter(self, _event: tk.Event[tk.Misc]) -> None:
-        if str(self.cget("state")) != "disabled":
-            self.configure(bg=self._hover_bg, highlightbackground=self._hover_bg)
-
-    def _on_leave(self, _event: tk.Event[tk.Misc]) -> None:
-        self.configure(bg=self._base_bg, highlightbackground=self._base_bg)
+    def _configure_palette(self) -> None:
+        self._style.configure(
+            self._style_name,
+            background=self._base_bg,
+            foreground=self._foreground,
+            font=self._font,
+            anchor=self._anchor,
+            padding=(self._padx, self._pady),
+            borderwidth=1,
+            relief="flat",
+        )
+        self._style.map(
+            self._style_name,
+            background=[
+                ("disabled", self._base_bg),
+                ("pressed", self._hover_bg),
+                ("active", self._hover_bg),
+            ],
+            foreground=[
+                ("disabled", COLORS["muted"]),
+                ("!disabled", self._foreground),
+            ],
+        )
 
 
 class TimedLeetApp(tk.Tk):
@@ -387,6 +394,14 @@ class TimedLeetApp(tk.Tk):
         if self.running and not self.has_started:
             self.has_started = True
             self._speech.say(self.session.current_phase.prompt)
+        self.status_label.configure(
+            text=(
+                f"{self.session.current_phase.name} started."
+                if self.running
+                else "Timer paused."
+            ),
+            fg=COLORS["muted"],
+        )
         self._render()
 
     def _reset(self) -> None:
