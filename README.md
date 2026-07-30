@@ -1,5 +1,7 @@
 # Timed Leet
 
+![alt text](image.png)
+
 Timed Leet is a cross-platform desktop coach for practicing LeetCode-style
 interviews. It guides you through a structured **45-minute session**, or a
 **51-minute session** when you choose to write the brute force solution.
